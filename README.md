@@ -9,6 +9,15 @@ are delegated to cheap / local subagent models via role commands.
 
 > Philosophy: keep the costly model's context lean. Direct, don't do.
 
+## Why this works
+
+| Benefit | How |
+|---|---|
+| **Best of both worlds** | A high-accuracy main model (Claude Opus, GPT-4.1, etc.) makes smart decisions, while cheap subagent models do the heavy lifting. You get the main model's reasoning without paying for its work tokens. |
+| **Light main-model context** | The orchestrator only receives subagents' final outputs (capped at ~50 KB). It never sees raw search results, full file dumps, or intermediate diffs — so input and output tokens stay small. |
+| **Fair, unbiased verification** | The verifier subagent works in a clean context separate from the implementer. The orchestrator judges results without the "testing your own work" bias that accumulates in a single long context. |
+| **Subagents outperform standalone** | Lightweight models alone tend to give up early or miss the right path. Guided by precise prompts from the orchestrator, they reliably reach the information you need. The subagent harness also lets models that would normally stop halfway keep working for extended sessions. |
+
 ## How it works
 
 Four role slash-commands each spawn a specialized subagent and inject a role-specific
@@ -32,6 +41,50 @@ when unused.
 Model routing is centralized in **`extensions/subagent-models.json`**: an ordered
 `defaults` pool (the Nth concurrent spawn uses `defaults[N-1]`), a `defaultOverflow`
 model for spawns beyond the pool or on spawn-error, and per-role overrides.
+
+**Model selection guideline:**
+- **If you have a local LLM** (e.g. Qwen-27B via llama.cpp): set it as the primary `defaults[0]`.
+  It runs for free and handles most subagent work. Use a cloud model for `defaultOverflow`
+  (parallel overflow or error fallback).
+- **No local LLM**: it is fine to use the same cheap cloud model (e.g. DeepSeek V4 Flash,
+  Mimo) for both `defaults` and `defaultOverflow`. The system still saves main-model tokens
+  by delegating work — the routing logic is the same.
+- **Per-role overrides** (e.g. `planner` → larger-window model) are optional but recommended
+  when a role benefits from a specific model's strengths.
+
+## Typical Workflow
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  Session 1                                                          │
+│  Start → /research <what you want>                                  │
+│  ┌─────────────────────────────────────────────────────────────┐    │
+│  │ Main model spawns Researcher subagents (local/cloud models) │    │
+│  │ Subagents work for 5-20 min, return results (≤50 KB each)   │    │
+│  │ Main model summarizes → you ask questions → refine design   │    │
+│  └─────────────────────────────────────────────────────────────┘    │
+│  Design is solid → /planner → saves plan file                      │
+│                                                                      │
+│  (Optional) /new to reset accumulated context                       │
+└─────────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│  Session 2 (clean context)                                          │
+│  /implementer <plan file>                                           │
+│  ┌─────────────────────────────────────────────────────────────┐    │
+│  │ Main model reads plan → fills gaps via Researcher           │    │
+│  │ Spawns implementer subagent → writes code                   │    │
+│  │ Spawns verifier subagent (read-only) → checks DoD           │    │
+│  │ FAIL → implementer fixes → re-verify (loop until PASS)      │    │
+│  └─────────────────────────────────────────────────────────────┘    │
+│  Done → /tester for independent final verification                  │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**Why split sessions?** Session 1 accumulates research context. Starting fresh for
+implementation gives the orchestrator a clean slate — it re-reads the plan file at full
+price once, but the small plan file is cheap to re-cache, and the clean context prevents
+research debris from polluting implementation decisions.
 
 ## Requirements
 
