@@ -1,0 +1,27 @@
+# Secrets & credentials — never commit
+auth.json
+*token*.txt
+*.token
+*secret*
+
+# Per-machine Pi config (users provide their own)
+models.json
+models.generated.js
+settings.json
+mcp*.json
+trust.json
+keybindings.json
+
+# Retired / backups
+*.bak
+*.bak.*
+
+# Runtime & deps
+sessions/
+node_modules/
+npm/
+bin/
+themes/
+nouse/
+*.lnk
+*.exe

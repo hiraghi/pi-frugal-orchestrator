@@ -1,0 +1,25 @@
+{
+  "_comment": "Shared model config for ALL subagent role-commands (/research, /planner, /implementer, /tester). 'defaults' is an ORDERED pool: the Nth concurrent spawn uses defaults[N-1]; once concurrency exceeds defaults.length, extra spawns use 'defaultOverflow'. Sequential spawns use defaults[0]. Per-role overrides live under 'roles'; an empty {} inherits the top-level pool. Legacy keys 'default' (string) and 'models' are still honored.",
+  "_setup": "Replace the placeholder model IDs below with model IDs that exist in your Pi provider config (models.json). 'local-llm/...' suggests a local llama.cpp/vLLM server; a cheaper/cloud model is a good 'defaultOverflow'.",
+
+  "models": [
+    "local-llm/YOUR_LOCAL_MODEL",
+    "remote-llm/YOUR_REMOTE_MODEL",
+    "opencode-go/YOUR_CLOUD_MODEL"
+  ],
+
+  "defaults": [
+    "local-llm/YOUR_LOCAL_MODEL"
+  ],
+  "defaultOverflow": "opencode-go/YOUR_CLOUD_MODEL",
+
+  "roles": {
+    "research": {},
+    "planner": {
+      "_comment": "Example per-role override: give the plan writer a stronger reasoning model.",
+      "defaults": ["opencode-go/YOUR_REASONING_MODEL"]
+    },
+    "implementer": {},
+    "tester": {}
+  }
+}
