@@ -13,7 +13,7 @@ are delegated to cheap / local subagent models via role commands.
 
 | Benefit | How |
 |---|---|
-| **Best of both worlds** | A high-accuracy main model (Claude Opus, GPT-4.1, etc.) makes smart decisions, while cheap subagent models do the heavy lifting. You get the main model's reasoning without paying for its work tokens. |
+| **Best of both worlds** | A high-accuracy main model (Claude Opus, GPT Codex, etc.) makes smart decisions, while cheap subagent models do the heavy lifting. You get the main model's reasoning without paying for its work tokens. |
 | **Light main-model context** | The orchestrator only receives subagents' final outputs (capped at ~50 KB). It never sees raw search results, full file dumps, or intermediate diffs — so input and output tokens stay small. |
 | **Fair, unbiased verification** | The verifier subagent works in a clean context separate from the implementer. The orchestrator judges results without the "testing your own work" bias that accumulates in a single long context. |
 | **Subagents outperform standalone** | Lightweight models alone tend to give up early or miss the right path. Guided by precise prompts from the orchestrator, they reliably reach the information you need. The subagent harness also lets models that would normally stop halfway keep working for extended sessions. |
@@ -43,7 +43,7 @@ Model routing is centralized in **`extensions/subagent-models.json`**: an ordere
 model for spawns beyond the pool or on spawn-error, and per-role overrides.
 
 **Model selection guideline:**
-- **If you have a local LLM** (e.g. Qwen-27B via llama.cpp): set it as the primary `defaults[0]`.
+- **If you have a local LLM**: set it as the primary `defaults[0]`.
   It runs for free and handles most subagent work. Use a cloud model for `defaultOverflow`
   (parallel overflow or error fallback).
 - **No local LLM**: it is fine to use the same cheap cloud model (e.g. DeepSeek V4 Flash,
