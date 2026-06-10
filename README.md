@@ -55,30 +55,21 @@ model for spawns beyond the pool or on spawn-error, and per-role overrides.
 ## Typical Workflow
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│  Session 1                                                          │
-│  Start → /research <what you want>                                  │
-│  ┌─────────────────────────────────────────────────────────────┐    │
-│  │ Main model spawns Researcher subagents (local/cloud models) │    │
-│  │ Subagents work for 5-20 min, return results (≤50 KB each)   │    │
-│  │ Main model summarizes → you ask questions → refine design   │    │
-│  └─────────────────────────────────────────────────────────────┘    │
-│  Design is solid → /planner → saves plan file                      │
-│                                                                      │
-│  (Optional) /new to reset accumulated context                       │
-└─────────────────────────────────────────────────────────────────────┘
+Session 1
+  Start → /research <what you want>
+    → Main model spawns Researcher subagents (local/cloud models)
+    → Subagents work for 5-20 min, return results (≤50 KB each)
+    → Main model summarizes → you ask questions → refine design
+    → Design is solid → /planner → saves plan file
+  (Optional) /new to reset accumulated context
                               ↓
-┌─────────────────────────────────────────────────────────────────────┐
-│  Session 2 (clean context)                                          │
-│  /implementer <plan file>                                           │
-│  ┌─────────────────────────────────────────────────────────────┐    │
-│  │ Main model reads plan → fills gaps via Researcher           │    │
-│  │ Spawns implementer subagent → writes code                   │    │
-│  │ Spawns verifier subagent (read-only) → checks DoD           │    │
-│  │ FAIL → implementer fixes → re-verify (loop until PASS)      │    │
-│  └─────────────────────────────────────────────────────────────┘    │
-│  Done → /tester for independent final verification                  │
-└─────────────────────────────────────────────────────────────────────┘
+Session 2 (clean context)
+  /implementer <plan file>
+    → Main model reads plan → fills gaps via Researcher
+    → Spawns implementer subagent → writes code
+    → Spawns verifier subagent (read-only) → checks DoD
+    → FAIL → implementer fixes → re-verify (loop until PASS)
+    → Done → /tester for independent final verification
 ```
 
 **Why split sessions?** Session 1 accumulates research context. Starting fresh for
@@ -115,7 +106,7 @@ requirements, installing `@tintinweb/pi-subagents`, copying only the needed file
    packages (see Pi's package docs), so the `Agent` tool is available.
 3. Edit `~/.pi/agent/extensions/subagent-models.json` and replace the placeholder model
    IDs (`YOUR_LOCAL_MODEL`, `YOUR_REMOTE_MODEL`, `YOUR_CLOUD_MODEL`, `YOUR_REASONING_MODEL`)
-   with model IDs that exist in your Pi `models.json`.
+   with model IDs that exist in your Pi `models.json` or `models.generated.js`.
 4. Keep `extensions/common-orchestrator.md` in your extensions dir — the role commands
    load and inject it automatically while a mode is active (no need to paste it into
    `AGENTS.md`).
