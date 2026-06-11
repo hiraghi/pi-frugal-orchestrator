@@ -627,13 +627,26 @@ export default function (pi: ExtensionAPI) {
 	// Appended at the END of the system prompt so the AGENTS.md + tool prefix
 	// stays cacheable across turns (only the appended suffix is new). The kickoff
 	// turn is skipped because its message already carries the role context.
-	pi.on("before_agent_start", async (event: any) => {
+	pi.on("before_agent_start", async (event: any, ctx: any) => {
 		if (!activeMode) return;
 		if (skipNextInjection) {
 			skipNextInjection = false;
 			return;
 		}
-		const appendix = buildModeAppendix();
+		let appendix = buildModeAppendix();
+		if (activeMode === "planner") {
+			const u = ctx.getContextUsage?.();
+			if (u && u.contextWindow > 0) {
+				const pct =
+					u.percent != null
+						? Math.round(u.percent)
+						: Math.round((u.tokens / u.contextWindow) * 100);
+				appendix +=
+					`\n\n[CONTEXT USAGE: ${pct}% (${u.tokens ?? "?"}/${u.contextWindow} tokens)]` +
+					` — プラン確定時、この値とプランの自己完結度を経、` +
+					`新セッション(最安・情報欠落リスク)か同セッション継続(欠落無し・割高)かをユーザーへ提案せよ。`;
+			}
+		}
 		if (!appendix) return;
 		return { systemPrompt: (event.systemPrompt ?? "") + appendix };
 	});

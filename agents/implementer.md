@@ -1,4 +1,8 @@
 ---
+# DEPRECATED
+# /implementer は中級メインモデルが直接実装する方式へ移行しました。
+# 自律ワークフローは implementer-orchestrator.md に内包されています。削除せず温存。
+---
 name: implementer
 description: Autonomously implements a plan file, runs tests, and self-fixes failures
 tools: read, write, edit, bash, grep, find, ls

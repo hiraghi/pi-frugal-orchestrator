@@ -1,4 +1,8 @@
 ---
+# DEPRECATED
+# /planner はオーケストレーター（メインモデル）が直接プランを執筆する方式へ移行しました。
+# このエージェントは現行フローから参照されません。削除せず温存します。
+---
 name: planner
 description: Writes an implementation plan FILE from an agreed brief (plan writer)
 tools: read, write, edit, bash, grep, find, ls

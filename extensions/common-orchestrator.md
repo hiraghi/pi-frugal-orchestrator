@@ -78,12 +78,12 @@ The WHEN (inline vs delegate) lives in `## Research Protocol`; this section is t
 
 ## Orchestrator roles (beyond Researcher)
 
-The main model is an ORCHESTRATOR: it directs cheap subagents and reasons over their
-returns, keeping its own context lean. Role commands inject an orchestrator prompt +
-MODEL ROUTING from `subagent-models.json`:
-- `/research` → Researcher (read-only investigation)
-- `/planner` → writer (`planner` agent, saves the plan FILE) + checker (Researcher,
-  read-only) loop; the orchestrator reads only the checker's checklist, never the full plan.
-- `/implementer` → fills gaps via Researcher, then implements (delegate mechanical
-  changes to the `implementer` agent / write subtle ones yourself) → verify.
-- `/tester` → `verifier` agent re-runs the falsifiable DoD checks independently.
+Role commands inject an orchestrator prompt + MODEL ROUTING from `subagent-models.json`.
+Each role assigns work to the most cost-effective actor (hybrid model — not all-cheap-subagents):
+- `/research` → frontier main orchestrates cheap **Researcher** subagents (read-only). Unchanged.
+- `/planner` → **main writes the plan file directly** (frontier quality, no delegation overhead)
+  \+ cheap **Researcher** checker verifies. Orchestrator reads only the checker's checklist.
+- `/implementer` → **mid-tier main implements directly** (user switches model via `/model` before
+  this command). Cheap **Researcher** subagents handle lookups only. Cheap **verifier** subagent
+  issues the final DoD PASS/FAIL — main does NOT self-certify. Loop: implement → verifier → fix.
+- `/tester` → cheap **verifier** agent re-runs the falsifiable DoD checks independently.
