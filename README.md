@@ -3,17 +3,18 @@
 # pi-frugal-orchestrator
 
 A **token-frugal orchestration layer** for the [Pi coding agent](https://github.com/earendil-works/pi).
-The expensive main model acts purely as an **orchestrator** — it issues instructions and
-judges results — while the actual work tokens (research, planning, implementation, testing)
-are delegated to cheap / local subagent models via role commands.
+The expensive main model acts as an **orchestrator** — it issues instructions and
+judges results — and each task is assigned to the most cost-effective actor (a **hybrid**
+model, not all-cheap-subagents): a frontier main writes plans itself, a mid-tier main
+implements directly, and cheap / local subagents handle research, lookups, and verification.
 
-> Philosophy: keep the costly model's context lean. Direct, don't do.
+> Philosophy: keep the costly model's context lean. Assign every task to the cheapest actor that can do it well.
 
 ## Why this works
 
 | Benefit | How |
 |---|---|
-| **Best of both worlds** | A high-accuracy main model (Claude Opus, GPT Codex, etc.) makes smart decisions, while cheap subagent models do the heavy lifting. You get the main model's reasoning without paying for its work tokens. |
+| **Best of both worlds** | A high-accuracy main model (Claude Opus, GPT Codex, etc.) makes smart decisions and handles work that needs frontier quality (e.g. writing the plan), while cheap subagent models do the parallel heavy lifting (research, lookups, verification). |
 | **Light main-model context** | The orchestrator only receives subagents' final outputs (capped at ~50 KB). It never sees raw search results, full file dumps, or intermediate diffs — so input and output tokens stay small. |
 | **Fair, unbiased verification** | The verifier subagent works in a clean context separate from the implementer. The orchestrator judges results without the "testing your own work" bias that accumulates in a single long context. |
 | **Subagents outperform standalone** | Lightweight models alone tend to give up early or miss the right path. Guided by precise prompts from the orchestrator, they reliably reach the information you need. The subagent harness also lets models that would normally stop halfway keep working for extended sessions. |
@@ -26,8 +27,8 @@ orchestrator prompt, with model routing pulled from a single config file:
 | Command | Role | Subagent |
 |---|---|---|
 | `/research` | read-only investigation | `Researcher` |
-| `/planner` | writes an implementation plan FILE | `planner` (writer) + `Researcher` (checker) |
-| `/implementer` | implements a plan, self-verifies | `implementer` + `Researcher` |
+| `/planner` | writes an implementation plan FILE | **main writes it directly** + `Researcher` (read-only checker) |
+| `/implementer` | implements a plan | **mid-tier main implements directly** + `Researcher` (lookups) + `verifier` (final DoD judgment) |
 | `/tester` | re-runs the plan's Definition-of-Done checks | `verifier` |
 
 Each command **enters a persistent role mode**. `/research <task>` in one step delivers
@@ -64,11 +65,12 @@ Session 1
   (Optional) /new to reset accumulated context
                               ↓
 Session 2 (clean context)
+  (Switch to a mid-tier model via /model before /implementer)
   /implementer <plan file>
-    → Main model reads plan → fills gaps via Researcher
-    → Spawns implementer subagent → writes code
+    → Main model reads plan → fills gaps via Researcher (lookups only)
+    → Main model writes the code itself (no delegation)
     → Spawns verifier subagent (read-only) → checks DoD
-    → FAIL → implementer fixes → re-verify (loop until PASS)
+    → FAIL → main model fixes → re-verify (loop until PASS)
     → Done → /tester for independent final verification
 ```
 
@@ -115,7 +117,8 @@ requirements, installing `@tintinweb/pi-subagents`, copying only the needed file
 ## Files
 
 ```
-agents/            # subagent definitions (Researcher, planner, implementer, verifier)
+agents/            # subagent definitions — Researcher & verifier are spawned by the role flows;
+                   #   planner.md / implementer.md are legacy (the main model now writes/implements directly)
 extensions/
   subagent-models.ts          # model-routing logic + role command registration
   subagent-models.json        # model routing config (edit placeholders)
