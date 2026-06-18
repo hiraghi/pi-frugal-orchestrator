@@ -17,7 +17,7 @@
 //   - On `agent_end`, re-assert the cached title (covers the subagent
 //     session_info_changed reset mid-session).
 //
-// /research|/planner|/implementer|/tester are handled in subagent-models.ts,
+// /research|/planner|/implementer|/tester|/reviewer are handled in subagent-models.ts,
 // which sets+persists the title via the same shared flag (it persists too).
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
@@ -31,7 +31,7 @@ const CMD_PREFIX = /^\/[\w-]+(?::[\w-]+)?\s*/;
 // Orchestrator-style opening prompts embed the real intent after this marker
 // (research/planner/... templates use "Top-level question:" / "Task:").
 // Title from the question, not the boilerplate "You are the ... ORCHESTRATOR".
-const QUESTION_MARKER = /(?:Top-level question|Task|Planning topic[^:]*|What to verify[^:]*|Plan file path[^:]*):\s*([\s\S]+)/i;
+const QUESTION_MARKER = /(?:Top-level question|Task|Planning topic[^:]*|What to verify[^:]*|What to review[^:]*|Plan file path[^:]*):\s*([\s\S]+)/i;
 
 // Shared with subagent-models.ts via process global.
 const _state = () =>

@@ -58,10 +58,11 @@ Replace them with model IDs that exist in **the user's Pi `models.json`**.
      becomes `defaults[0]`.
    - an **overflow** model (a cheap cloud model is fine) → becomes `defaultOverflow`.
    - optionally a stronger **reasoning** model for the `planner` role override.
+   - optionally a stronger **reviewer** model for the `reviewer` role override.
 3. Write the chosen IDs into `subagent-models.json`, replacing `YOUR_LOCAL_MODEL`,
-   `YOUR_REMOTE_MODEL`, `YOUR_CLOUD_MODEL`, `YOUR_REASONING_MODEL`. Remove the
-   `_comment` / `_setup` helper keys if the user wants a clean file (they are ignored
-   at runtime either way).
+   `YOUR_REMOTE_MODEL`, `YOUR_CLOUD_MODEL`, `YOUR_REASONING_MODEL`, and
+   `YOUR_REVIEWER_MODEL`. Remove the `_comment` / `_setup` helper keys if the user wants
+   a clean file (they are ignored at runtime either way).
 4. Show the final `subagent-models.json` and confirm it parses as valid JSON.
 
 > Schema reminder: `defaults` is an ORDERED pool — the Nth concurrent spawn uses
@@ -81,10 +82,12 @@ Tell the user to run **`/reload`** in Pi, then test with:
 
 ```
 /research <a small question>
+/reviewer <a small working-tree diff or base ref>
 ```
 
-Expected: it enters research mode (the role prompt + common rules are injected) and the
-orchestrator delegates to a `Researcher` subagent. `/orchestrator:exit` leaves the mode.
+Expected: `/research` enters research mode (the role prompt + common rules are injected)
+and delegates to a `Researcher` subagent. `/reviewer` enters review mode and delegates the
+diff review to a `reviewer` subagent. `/orchestrator:exit` leaves the mode.
 
 Report a short summary of what you installed, the model IDs you set, and anything the
 user still needs to do.

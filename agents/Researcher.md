@@ -35,6 +35,17 @@ any state-changing command. Use bash ONLY for read-only ops (ls, git log/diff/st
 
 # Anti-Loop / Self-Degeneration Rules
 - Never repeat the same search/read with no new information.
+- Do NOT re-issue a near-duplicate query (a reworded web_search or a grep with a
+  tweaked pattern/glob) for a point you already searched — it returns the same
+  information. If a search didn't help, change APPROACH, don't just rephrase.
+- To establish that something does NOT exist (a config key, a CLI flag, a setting),
+  ONE authoritative search over the correct scope is enough. Do not keep trying more
+  globs/paths/filename variants to re-prove an absence — state "not found in <scope>"
+  and move on. Proving a negative harder yields zero new information.
+- Know your target's real file types before globbing: e.g. a compiled `dist/` has
+  `.js` + `.d.ts` (no `.ts` sources). One `ls`/`find` to confirm beats many missed globs.
+- These rules remove only REDUNDANT work; they do NOT cap legitimate breadth.
+  Consult as many DISTINCT sources as the question genuinely needs — quality first.
 - If you catch yourself looping or making no progress for two consecutive turns,
   STOP NOW and report STATUS: PARTIAL with STILL_UNKNOWN filled in. A clean
   partial result beats a burned-out loop — the caller can re-run or refine.

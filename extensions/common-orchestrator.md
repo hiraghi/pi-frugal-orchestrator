@@ -1,7 +1,7 @@
 # Common Orchestrator Rules
 
 Shared rules for all orchestrator role-modes (`/research`, `/planner`, `/implementer`,
-`/tester`). Either include this content in your `AGENTS.md`, or inject it per-mode via
+`/tester`, `/reviewer`). Either include this content in your `AGENTS.md`, or inject it per-mode via
 the role-mode mechanism (see README). These rules apply whenever the main model is
 acting as an ORCHESTRATOR that directs cheap/local subagents.
 
@@ -87,3 +87,7 @@ Each role assigns work to the most cost-effective actor (hybrid model — not al
   this command). Cheap **Researcher** subagents handle lookups only. Cheap **verifier** subagent
   issues the final DoD PASS/FAIL — main does NOT self-certify. Loop: implement → verifier → fix.
 - `/tester` → cheap **verifier** agent re-runs the falsifiable DoD checks independently.
+- `/reviewer` → strong **reviewer** agent reads the diff and judges code quality
+  (correctness/design/security the tests don't catch). SEPARATE from `/tester`:
+  testing = objective DoD Pass/Fail; review = severity-tagged judgment (Blocker/Major
+  block, Minor/Nit advisory). In `/implementer`, review runs AFTER the verifier passes.

@@ -28,8 +28,9 @@ orchestrator prompt, with model routing pulled from a single config file:
 |---|---|---|
 | `/research` | read-only investigation | `Researcher` |
 | `/planner` | writes an implementation plan FILE | **main writes it directly** + `Researcher` (read-only checker) |
-| `/implementer` | implements a plan | **mid-tier main implements directly** + `Researcher` (lookups) + `verifier` (final DoD judgment) |
+| `/implementer` | implements a plan | **mid-tier main implements directly** + `Researcher` (lookups) + `verifier` (final DoD judgment) + `reviewer` (diff quality review) |
 | `/tester` | re-runs the plan's Definition-of-Done checks | `verifier` |
+| `/reviewer` | reviews a diff for correctness/design/security/maintainability | `reviewer` |
 
 Each command **enters a persistent role mode**. `/research <task>` in one step delivers
 the role context + your task as the kickoff message and starts work; every following
@@ -71,7 +72,8 @@ Session 2 (clean context)
     → Main model writes the code itself (no delegation)
     → Spawns verifier subagent (read-only) → checks DoD
     → FAIL → main model fixes → re-verify (loop until PASS)
-    → Done → /tester for independent final verification
+    → PASS → spawns reviewer subagent → fixes Blocker/Major findings
+    → Done (optional: /tester later for an independent DoD re-check)
 ```
 
 **Why split sessions?** Session 1 accumulates research context. Starting fresh for
@@ -107,8 +109,9 @@ requirements, installing `@tintinweb/pi-subagents`, copying only the needed file
 2. Install the subagents package into Pi: add `@tintinweb/pi-subagents` to your Pi
    packages (see Pi's package docs), so the `Agent` tool is available.
 3. Edit `~/.pi/agent/extensions/subagent-models.json` and replace the placeholder model
-   IDs (`YOUR_LOCAL_MODEL`, `YOUR_REMOTE_MODEL`, `YOUR_CLOUD_MODEL`, `YOUR_REASONING_MODEL`)
-   with model IDs that exist in your Pi `models.json` or `models.generated.js`.
+   IDs (`YOUR_LOCAL_MODEL`, `YOUR_REMOTE_MODEL`, `YOUR_CLOUD_MODEL`, `YOUR_REASONING_MODEL`,
+   `YOUR_REVIEWER_MODEL`) with model IDs that exist in your Pi `models.json` or
+   `models.generated.js`.
 4. Keep `extensions/common-orchestrator.md` in your extensions dir — the role commands
    load and inject it automatically while a mode is active (no need to paste it into
    `AGENTS.md`).
@@ -117,7 +120,7 @@ requirements, installing `@tintinweb/pi-subagents`, copying only the needed file
 ## Files
 
 ```
-agents/            # subagent definitions — Researcher & verifier are spawned by the role flows;
+agents/            # subagent definitions — Researcher, verifier, and reviewer are spawned by the role flows;
                    #   planner.md / implementer.md are legacy (the main model now writes/implements directly)
 extensions/
   subagent-models.ts          # model-routing logic + role command registration
@@ -127,6 +130,7 @@ extensions/
   planner-orchestrator.md     # /planner prompt
   implementer-orchestrator.md # /implementer prompt
   tester-orchestrator.md      # /tester prompt
+  reviewer-orchestrator.md    # /reviewer prompt
   session-tab-title.ts        # UI: per-session tab titles
   subagent-context-watchdog.ts# wraps up subagents nearing context limits
 ```

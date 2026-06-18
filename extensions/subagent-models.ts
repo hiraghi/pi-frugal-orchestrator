@@ -5,8 +5,9 @@
 //
 //   /research <q>      orchestrate the Researcher subagent
 //   /planner <topic>   orchestrate Planner (writer) + checker subagents
-//   /implementer <p>   orchestrate implementer + verifier subagents
+//   /implementer <p>   orchestrate implementer + verifier/reviewer subagents
 //   /tester <p>        orchestrate the verifier subagent (independent checks)
+//   /reviewer <p>      orchestrate the reviewer subagent (independent code review)
 //
 //   /<role>            (no args) → show this role's session model settings
 //   /<role>:models     pick the PRIMARY model (= DEFAULTS[0]) for this role+session
@@ -73,6 +74,12 @@ const ROLES: Role[] = [
 		agent: "verifier",
 		verb: "Test",
 		orchestrator: "tester-orchestrator.md",
+	},
+	{
+		key: "reviewer",
+		agent: "reviewer",
+		verb: "Review",
+		orchestrator: "reviewer-orchestrator.md",
 	},
 ];
 

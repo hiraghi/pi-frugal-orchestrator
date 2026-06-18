@@ -6,6 +6,11 @@ Top-level question: {{QUESTION}}
 `Agent({ subagent_type: "Researcher", model: <per MODEL ROUTING>, prompt: <full question + all context the agent needs>, description: <3-5 words> })`
 - ALWAYS pass `model` explicitly (MODEL ROUTING below is authoritative).
 - Independent sub-questions → spawn in parallel with `run_in_background: true`.
+- Do NOT pack a broad enumeration/survey ("compare A,B,C,D,E…", "list all X") into ONE
+  spawn — one shared window starves later items and degrades quality. Split into **2–3
+  items per spawn**, run in parallel, and synthesize the returns. Each sub-question then
+  gets its OWN full context window, so it may search/fetch as much as its scope needs.
+  Splitting widens total research room — it is a quality win, never a rationing of depth.
 
 ## The loop
 Keep a **ledger**: `{ question, model, STATUS, facts, NEW_LEADS, STILL_UNKNOWN }`.

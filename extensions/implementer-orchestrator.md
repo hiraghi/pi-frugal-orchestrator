@@ -10,8 +10,10 @@ The PASS/FAIL of the Definition of Done is decided by the **verifier subagent**.
 
 Implementation loop:
 ```
-implement → verifier checks → fix the findings → re-verify (max 3 rounds)
+implement → verifier checks (DoD PASS/FAIL) → fix → re-verify (max 3 rounds)
+            → reviewer checks (code quality) → fix Blocker/Major → re-review (max 2 rounds)
 ```
+Verification and review are SEPARATE layers: the verifier decides whether the work meets the DoD (objective Pass/Fail); the reviewer judges code quality on the diff (correctness/design/security the tests don't catch). Run verification first (fail-fast, cheap), then review what passed.
 
 ## Step 0 — Read the plan
 Read the plan file once. If there are `⚠️ASSUMPTION` tags, verify them against the code and resolve them before implementing.
@@ -46,6 +48,19 @@ Agent({ subagent_type: "verifier", model: <DEFAULTS[0]>, prompt: "Independently 
 - verifier FAIL → fix only the flagged items → re-verify (max 3 rounds).
 - If FAIL persists after 3 rounds → report that item as "not met" in the final report and STOP.
 
+## Step 4 — Independent code review (after the DoD passes)
+Once the verifier reports PASS, delegate a **code review of the diff** to a **reviewer subagent** (read-only). Use a reviewer-quality model from `roles.reviewer.defaults[0]` in `extensions/subagent-models.json`; if that role is not configured, use the strongest appropriate model available. Do NOT use `DEFAULTS[0]` from the appended MODEL ROUTING block here — that block reflects the ACTIVE `/implementer` role, so it would resolve to the implementer's model. Review is a QUALITY judgment, NOT a re-run of the DoD checks.
+
+```
+Agent({ subagent_type: "reviewer", model: "<reviewer model from roles.reviewer.defaults[0]>", prompt: "Review the diff `git diff <base>...HEAD` (or the working-tree diff) for correctness/design/security/maintainability. plan_path: <path>. dod: <items, so you don't re-test them>.", description: "Review: <topic>" })
+```
+
+Triage the reviewer's severity-tagged findings:
+- **Blocker / Major** → fix them yourself → re-review only the changed areas (max 2 rounds). If one genuinely persists after 2 rounds, report it as an unresolved must-fix and STOP.
+- **Minor / Nit** → do NOT block; list them as advisory in the final report for the user to decide.
+
+Review findings are judgment, not falsifiable Pass/Fail — never let a subjective nit become a hard gate.
+
 ## Reload dependency
 Changes to extensions, prompts, or agent definitions require `/reload`. If a reload-dependent check remains, STOP and ask the user to `/reload`, then re-run the verifier after completion.
 
@@ -67,6 +82,12 @@ Changes to extensions, prompts, or agent definitions require `/reload`. If a rel
 
 ### Test results
 - command — result
+
+### Code review (reviewer subagent)
+- Verdict: ship | fix-blockers-first
+- Blocker/Major: `file:line` — issue — status (fixed | unresolved)
+- Advisory (Minor/Nit): `file:line` — issue (left for user to decide)
+- (or "No findings")
 
 ### Deviations from the plan
 - None (or details and rationale)
